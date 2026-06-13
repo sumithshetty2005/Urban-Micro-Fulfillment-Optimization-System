@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://urban-mfc-backend.onrender.com/api/:path*"
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-panel {
+    background-color: rgba(248, 250, 252, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  }
+  
+  .glass-panel-glow {
+    background-color: rgba(248, 250, 252, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.08), 0 4px 30px rgba(0, 0, 0, 0.03);
+  }
+}
+
+:root {
+  --background: #FFFFFF;
+  --surface: #F0F0F0;
+  --border: #C0C0C0;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* HashLoader Animation */
+.hash-loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.hash-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #111827;
+  border-radius: 50%;
+  animation: dotPulse 1.2s infinite ease-in-out;
+}
+.hash-dot:nth-child(1) { animation-delay: 0s; }
+.hash-dot:nth-child(2) { animation-delay: 0.2s; }
+.hash-dot:nth-child(3) { animation-delay: 0.4s; }
+.hash-dot:nth-child(4) { animation-delay: 0.6s; }
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+    background-color: #4F46E5;
+  }
+}
+
+/* Custom scrollbar styling for premium look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(17, 24, 37, 0.05);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(17, 24, 37, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 24, 37, 0.3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Force text visibility on light theme for elements hardcoded with text-white */
+.text-white:not(button *, .bg-indigo-600 *, .bg-purple-600 *, .bg-purple-500 *, .bg-indigo-500 *, .bg-\[\#111827\] *, .bg-\[\#111827\], .bg-\[\#0F172A\] *, .bg-\[\#0F172A\], .bg-\[\#1E293B\] *, .bg-\[\#1E293B\], .bg-slate-950 *, button, .text-white-force) {
+  color: #111827 !important;
+}
+
+.hover\:text-white:hover:not(button *, .bg-indigo-600 *, .bg-purple-600 *, .bg-purple-500 *, .bg-indigo-500 *, .bg-\[\#111827\] *, button) {
+  color: #111827 !important;
+}
+
+/* Custom dual-ring style for sliders */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4px solid #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3), 0 3px 6px rgba(0,0,0,0.15);
+}
+
+input[type="range"].competitor-range::-webkit-slider-thumb {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2), 0 2px 4px rgba(0,0,0,0.1);
+}
+input[type="range"].competitor-range::-webkit-slider-thumb:hover {
+  border-color: #c084fc;
+  box-shadow: 0 0 0 4px rgba(192, 132, 252, 0.3), 0 3px 6px rgba(0,0,0,0.15);
+}
+
+input[type="range"].temp-range::-webkit-slider-thumb {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), 0 2px 4px rgba(0,0,0,0.1);
+}
+input[type="range"].temp-range::-webkit-slider-thumb:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.3), 0 3px 6px rgba(0,0,0,0.15);
+}
+
+input[type="range"].inventory-range::-webkit-slider-thumb {
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2), 0 2px 4px rgba(0,0,0,0.1);
+}
+input[type="range"].inventory-range::-webkit-slider-thumb:hover {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.3), 0 3px 6px rgba(0,0,0,0.15);
+}
+
+/* Also support Firefox slider thumb */
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4px solid #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+}
+input[type="range"].competitor-range::-moz-range-thumb {
+  border-color: #a855f7;
+}
+input[type="range"].temp-range::-moz-range-thumb {
+  border-color: #f59e0b;
+}
+input[type="range"].inventory-range::-moz-range-thumb {
+  border-color: #06b6d4;
+}
+
+/* Force clean, high-contrast, professional monochromatic shades for readability on light glass backgrounds */
+.glass-panel, .glass-panel-glow {
+  color: #1e293b !important; /* text-slate-800 */
+}
+
+/* Titles and major text elements */
+.glass-panel .text-slate-100,
+.glass-panel-glow .text-slate-100,
+.glass-panel .text-slate-200,
+.glass-panel-glow .text-slate-200,
+.glass-panel .text-slate-300,
+.glass-panel-glow .text-slate-300,
+.glass-panel h2, .glass-panel-glow h2,
+.glass-panel h3, .glass-panel-glow h3,
+.glass-panel h4, .glass-panel-glow h4,
+.glass-panel-glow .text-slate-200,
+.glass-panel-glow .text-slate-100 {
+  color: #0f172a !important; /* Extremely readable black/slate-900 */
+}
+
+/* Secondary and descriptive texts */
+.glass-panel .text-slate-400,
+.glass-panel-glow .text-slate-400,
+.glass-panel .text-slate-500,
+.glass-panel-glow .text-slate-500,
+.glass-panel p, .glass-panel-glow p:not(.text-slate-100) {
+  color: #334155 !important; /* Dark slate grey */
+}
+
+/* Normalize all colored helper/value texts to a uniform, professional dark indigo/charcoal color */
+.glass-panel .text-indigo-400,
+.glass-panel-glow .text-indigo-400,
+.glass-panel .text-violet-400,
+.glass-panel-glow .text-violet-400,
+.glass-panel .text-purple-400,
+.glass-panel-glow .text-purple-400,
+.glass-panel .text-cyan-400,
+.glass-panel-glow .text-cyan-400,
+.glass-panel .text-indigo-300,
+.glass-panel .text-cyan-300,
+.glass-panel .text-purple-300,
+.glass-panel .text-emerald-400,
+.glass-panel .text-emerald-300,
+.glass-panel .text-amber-400,
+.glass-panel .text-amber-300,
+.glass-panel .text-rose-400,
+.glass-panel .text-rose-300 {
+  color: #1e293b !important;
+}
+
+/* All dark containers should force light text colors for legibility */
+.bg-slate-950, .bg-slate-900, .bg-slate-950\/60, .bg-\[\#111827\], .bg-\[\#111827\]\/40, .bg-\[\#070A13\], .bg-\[\#0B0F19\]\/95, .bg-\[\#0F172A\], .bg-\[\#1E293B\], .dark-map-container {
+  color: #f1f5f9 !important;
+}
+
+/* Specific text utilities inside dark containers */
+.bg-slate-950 .text-slate-100, .bg-slate-900 .text-slate-100, .bg-slate-950\/60 .text-slate-100, .bg-\[\#111827\] .text-slate-100, .bg-\[\#070A13\] .text-slate-100, .bg-\[\#0B0F19\]\/95 .text-slate-100, .bg-\[\#0F172A\] .text-slate-100, .dark-map-container .text-slate-100,
+.bg-slate-950 .text-slate-200, .bg-slate-900 .text-slate-200, .bg-slate-950\/60 .text-slate-200, .bg-\[\#111827\] .text-slate-200, .bg-\[\#070A13\] .text-slate-200, .bg-\[\#0B0F19\]\/95 .text-slate-200, .bg-\[\#0F172A\] .text-slate-200, .dark-map-container .text-slate-200,
+.bg-slate-950 .text-slate-300, .bg-slate-900 .text-slate-300, .bg-slate-950\/60 .text-slate-300, .bg-\[\#111827\] .text-slate-300, .bg-\[\#070A13\] .text-slate-300, .bg-\[\#0B0F19\]\/95 .text-slate-300, .bg-\[\#0F172A\] .text-slate-300, .dark-map-container .text-slate-300,
+.bg-\[\#0F172A\] .text-white, .bg-\[\#1E293B\] .text-white,
+.dark-map-container .text-slate-100, .dark-map-container .text-slate-200, .dark-map-container .text-\[\#F1F5F9\] {
+  color: #f1f5f9 !important;
+}
+
+.bg-slate-950 .text-slate-400, .bg-slate-900 .text-slate-400, .bg-slate-950\/60 .text-slate-400, .bg-\[\#111827\] .text-slate-400, .bg-\[\#070A13\] .text-slate-400, .bg-\[\#0B0F19\]\/95 .text-slate-400, .bg-\[\#0F172A\] .text-slate-400, .dark-map-container .text-slate-400,
+.bg-slate-950 .text-slate-500, .bg-slate-900 .text-slate-500, .bg-slate-950\/60 .text-slate-500, .bg-\[\#111827\] .text-slate-500, .bg-\[\#070A13\] .text-slate-500, .bg-\[\#0B0F19\]\/95 .text-slate-500, .bg-\[\#0F172A\] .text-slate-500, .dark-map-container .text-slate-500,
+.dark-map-container .text-\[\#94A3B8\], .dark-map-container .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Maintain original color highlights inside dark widgets */
+.bg-slate-950 .text-cyan-400, .bg-slate-950\/60 .text-cyan-400, .bg-\[\#0F172A\] .text-cyan-400 { color: #22d3ee !important; }
+.bg-slate-950 .text-indigo-300, .bg-slate-950\/60 .text-indigo-300, .bg-\[\#0F172A\] .text-indigo-300 { color: #a5b4fc !important; }
+.bg-slate-950 .text-emerald-400, .bg-slate-950\/60 .text-emerald-400, .bg-\[\#0F172A\] .text-emerald-400 { color: #34d399 !important; }
+.bg-slate-950 .text-amber-300, .bg-slate-950\/60 .text-amber-300, .bg-\[\#0F172A\] .text-amber-300 { color: #fcd34d !important; }
+.bg-slate-950 .text-amber-400, .bg-slate-950\/60 .text-amber-400, .bg-\[\#0F172A\] .text-amber-400 { color: #fbbf24 !important; }
+.bg-slate-950 .text-rose-300, .bg-slate-950\/60 .text-rose-300, .bg-\[\#0F172A\] .text-rose-300 { color: #fca5a5 !important; }
+.bg-slate-950 .text-purple-200, .bg-slate-950\/60 .text-purple-200, .bg-\[\#0F172A\] .text-purple-200 { color: #e9d5ff !important; }
+.bg-slate-950 .text-purple-400, .bg-\[\#0F172A\] .text-purple-400 { color: #c084fc !important; }
+.bg-slate-950 .text-blue-400, .bg-\[\#0F172A\] .text-blue-400 { color: #60a5fa !important; }
+.bg-slate-950 .text-violet-400, .bg-\[\#0F172A\] .text-violet-400 { color: #a78bfa !important; }
+.bg-slate-950 .text-pink-400, .bg-\[\#0F172A\] .text-pink-400 { color: #f472b6 !important; }
+.bg-slate-950 .text-rose-400, .bg-\[\#0F172A\] .text-rose-400 { color: #fb7185 !important; }
+.bg-slate-950 .text-emerald-500\/5, .bg-slate-950\/60 .text-emerald-500\/5 { color: inherit !important; }
+
+/* Keep map colors for routes and node indexes looking vibrant against black/dark bg */
+.dark-map-container text {
+  fill: #e2e8f0 !important; /* Route labels like #1, #2 readable on dark map */
+  font-weight: 700;
+}
+
+

@@ -1,0 +1,8 @@
+pandas
+pyarrow
+statsmodels
+ortools<9.11
+fastapi
+uvicorn
+requests
+jinja2
