@@ -2,28 +2,26 @@ import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
 
-# Unit production/acquisition cost definitions per SKU
 SKU_COSTS = {
-    "SKU_001": 10.00,  # Cold Beverage
-    "SKU_002": 8.00,   # Hot Coffee
-    "SKU_003": 5.00,   # Rain Poncho
-    "SKU_004": 25.00,  # Premium Ice Cream
-    "SKU_005": 9.00    # Instant Noodles
+    "SKU_001": 10.00,
+    "SKU_002": 8.00,
+    "SKU_003": 5.00,
+    "SKU_004": 25.00,
+    "SKU_005": 9.00
 }
 
 def filter_by_period(df: pd.DataFrame, period: str) -> pd.DataFrame:
     df = df.copy()
     df["Timestamp_dt"] = pd.to_datetime(df["Timestamp"])
     max_date = df["Timestamp_dt"].max()
-    
+
     if period == "Last 7 Days":
         cutoff = max_date - pd.Timedelta(days=7)
         df = df[df["Timestamp_dt"] >= cutoff]
     elif period == "Last 30 Days":
         cutoff = max_date - pd.Timedelta(days=30)
         df = df[df["Timestamp_dt"] >= cutoff]
-    # "Last Quarter" or others uses the full dataset
-    
+
     df = df.drop(columns=["Timestamp_dt"])
     return df
 
@@ -31,35 +29,29 @@ def optimize_pricing(parquet_path: str, sku_id: str, inventory: int = 250, holdi
     """
     Run Log-Log OLS Regression for a given SKU:
       ln(Demand + 1) = Beta_0 + Beta_1*ln(Price) + Beta_2*ln(Competitor_Price) + ...
-    
+
     Sweep price variants (50% to 150% of current price at $0.10 steps) to solve for Maximum Profit:
       Profit = (Price - Cost) * min(Inventory, Predicted_Demand) - Holding_Cost * max(0, Inventory - Predicted_Demand)
     """
-    # Load historical transaction data
     df = pd.read_parquet(parquet_path)
-    
-    # Filter for the target SKU
+
     df_sku = df[df["SKU_ID"] == sku_id].copy()
-    
-    # Apply period retraining filter
+
     df_sku = filter_by_period(df_sku, period)
-    
+
     if len(df_sku) < 5:
         raise ValueError(f"Insufficient transaction data in selected period {period} (found {len(df_sku)} records) for SKU: {sku_id}")
-    
-    # Fetch unit cost
+
     cost = SKU_COSTS.get(sku_id, 6.00)
-    
-    # Fit the OLS model (Log-Log specification)
+
     model = smf.ols(
-        "np.log1p(Quantity_Sold) ~ np.log(Price) + np.log(Competitor_Price) + Promotion_Active + Temperature + Rain + Weekend + Festival + Holiday + C(Time_of_Day)", 
+        "np.log1p(Quantity_Sold) ~ np.log(Price) + np.log(Competitor_Price) + Promotion_Active + Temperature + Rain + Weekend + Festival + Holiday + C(Time_of_Day)",
         data=df_sku
     )
     results = model.fit()
-    
-    # Extract coefficients
+
     beta_0 = float(results.params["Intercept"])
-    beta_1 = float(results.params["np.log(Price)"])  # Direct elasticity coefficient!
+    beta_1 = float(results.params["np.log(Price)"])
     beta_2 = float(results.params["np.log(Competitor_Price)"])
     beta_3 = float(results.params["Promotion_Active"])
     beta_temp = float(results.params.get("Temperature", 0.0))
@@ -70,14 +62,12 @@ def optimize_pricing(parquet_path: str, sku_id: str, inventory: int = 250, holdi
     beta_tod_afternoon = float(results.params.get("C(Time_of_Day)[T.Afternoon]", 0.0))
     beta_tod_evening = float(results.params.get("C(Time_of_Day)[T.Evening]", 0.0))
     beta_tod_night = float(results.params.get("C(Time_of_Day)[T.Night]", 0.0))
-    
-    # Extract regression metrics
+
     r_squared = float(results.rsquared)
     p_values = results.pvalues.to_dict()
     t_stats = results.tvalues.to_dict()
     std_errors = results.bse.to_dict()
-    
-    # Clean up results keys for the statistics table in the UI
+
     clean_p_values = {}
     clean_t_stats = {}
     clean_std_errors = {}
@@ -90,13 +80,11 @@ def optimize_pricing(parquet_path: str, sku_id: str, inventory: int = 250, holdi
         clean_p_values[clean_key] = np.round(p_values[k], 4)
         clean_t_stats[clean_key] = np.round(t_stats[k], 4)
         clean_std_errors[clean_key] = np.round(std_errors[k], 4)
-        
-    # Sort chronologically by Timestamp to extract current pricing
+
     df_sku_sorted = df_sku.sort_values(by="Timestamp")
     latest_record = df_sku_sorted.iloc[-1]
     current_price = float(latest_record["Price"])
-    
-    # Set fixed conditions for forecasting (mean values for the SKU)
+
     mean_comp_price = float(df_sku["Competitor_Price"].mean())
     mean_promo = float(df_sku["Promotion_Active"].mean())
     mean_temp = float(df_sku["Temperature"].mean())
@@ -104,13 +92,11 @@ def optimize_pricing(parquet_path: str, sku_id: str, inventory: int = 250, holdi
     mean_weekend = float(df_sku["Weekend"].mean())
     mean_festival = float(df_sku["Festival"].mean())
     mean_holiday = float(df_sku["Holiday"].mean())
-    
-    # Proportions of the categorical time of day slots in the data
+
     prop_afternoon = float((df_sku["Time_of_Day"] == "Afternoon").mean())
     prop_evening = float((df_sku["Time_of_Day"] == "Evening").mean())
     prop_night = float((df_sku["Time_of_Day"] == "Night").mean())
-    
-    # Compute baseline demand in log space excluding the Price effect
+
     baseline_demand_log = (
         beta_0 +
         (beta_2 * np.log(mean_comp_price)) +
@@ -124,65 +110,57 @@ def optimize_pricing(parquet_path: str, sku_id: str, inventory: int = 250, holdi
         (beta_tod_evening * prop_evening) +
         (beta_tod_night * prop_night)
     )
-    
-    # Set price variant sweep range: [50% current_price, 150% current_price] in $0.10 increments
+
     start_price = np.round(current_price * 0.5, 1)
     end_price = np.round(current_price * 1.5, 1)
-    
-    # Generate pricing variants to sweep
+
     num_steps = int(np.round((end_price - start_price) / 0.1)) + 1
     prices_sweep = [np.round(start_price + i * 0.1, 2) for i in range(num_steps)]
-    
+
     optimal_price = current_price
     max_profit = -999999.0
     optimal_demand = 0.0
     optimal_revenue = 0.0
-    
+
     curve_points = []
-    
-    # Pricing optimization sweep loop
+
     for p in prices_sweep:
-        # Expected demand (Log-Log) = exp(baseline_demand_log + beta_1 * ln(Price)) - 1
         pred_demand = np.exp(baseline_demand_log + beta_1 * np.log(p)) - 1.0
         pred_demand = max(0.0, float(pred_demand))
-        
-        # Inventory constraints
+
         actual_sales = min(float(inventory), pred_demand)
         unsold_stock = max(0.0, float(inventory) - pred_demand)
         holding_penalty = unsold_stock * (cost * holding_cost_rate)
-        
+
         revenue = p * actual_sales
         profit = ((p - cost) * actual_sales) - holding_penalty
-        
+
         curve_points.append({
             "price": p,
             "predicted_demand": np.round(pred_demand, 2),
             "predicted_revenue": np.round(revenue, 2),
             "predicted_profit": np.round(profit, 2)
         })
-        
-        # Maximize Profit instead of Revenue
+
         if profit > max_profit:
             max_profit = profit
             optimal_price = p
             optimal_demand = pred_demand
             optimal_revenue = revenue
-            
-    # Calculate baseline metrics at current price using the same model assumptions
+
     pred_current_demand = np.exp(baseline_demand_log + beta_1 * np.log(current_price)) - 1.0
     pred_current_demand = max(0.0, float(pred_current_demand))
-    
+
     current_actual_sales = min(float(inventory), pred_current_demand)
     current_unsold_stock = max(0.0, float(inventory) - pred_current_demand)
     current_holding_penalty = current_unsold_stock * (cost * holding_cost_rate)
-    
+
     current_predicted_revenue = current_price * current_actual_sales
     current_predicted_profit = ((current_price - cost) * current_actual_sales) - current_holding_penalty
-    
-    # Profit uplift calculations
+
     profit_uplift = max_profit - current_predicted_profit
     profit_uplift_pct = (profit_uplift / current_predicted_profit * 100.0) if current_predicted_profit > 0 else 0.0
-    
+
     return {
         "sku_id": sku_id,
         "elasticity": np.round(beta_1, 4),

@@ -1,4 +1,3 @@
-# Placeholder for simulation services and algorithms
 
 def run_what_if_simulation(params):
     """

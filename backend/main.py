@@ -5,7 +5,6 @@ import sys
 import pandas as pd
 import requests
 
-# Ensure backend package imports resolve when run as a script
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.config import TRANSACTIONS_PATH, DELIVERIES_PATH
@@ -19,7 +18,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for frontend environments (including Vercel deployments)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,12 +49,12 @@ def get_pricing_optimization(
     period: str = Query(None, description="Specific time period for OLS retraining: 'Last 7 Days', 'Last 30 Days', 'Last Quarter'")
 ):
     """
-    Exposes pricing OLS regression metrics, coefficients, statistics, 
+    Exposes pricing OLS regression metrics, coefficients, statistics,
     priceVariant sweeps, and plotting curve coordinates.
     """
     if not os.path.exists(TRANSACTIONS_PATH):
         raise HTTPException(status_code=404, detail="transactions.parquet file not found.")
-    
+
     active_period = period if period else CURRENT_TRAINING_PERIOD
     try:
         result = optimize_pricing(TRANSACTIONS_PATH, sku_id, inventory=inventory, period=active_period)
@@ -79,7 +77,7 @@ def get_logistics_routing(
     driver_mode: str = Query("Manual", description="Driver recommendation mode")
 ):
     """
-    Computes distance matrix, initializes OR-Tools CVRP solver, and 
+    Computes distance matrix, initializes OR-Tools CVRP solver, and
     returns sequential vehicle routes, delivery coordinates, and load statistics.
     Includes AI driver recommendation features.
     """
@@ -88,30 +86,26 @@ def get_logistics_routing(
     try:
         import numpy as np
         ai_recommendation = None
-        
-        # Calculate AI recommended drivers if selected
+
         if driver_mode == "AI Recommended":
             df = pd.read_parquet(DELIVERIES_PATH).head(num_orders)
             total_weight = df["Package_Weight_KG"].sum()
             avg_payload = total_weight / len(df)
-            
-            # Base weight drivers needed
+
             min_drivers = int(np.ceil(total_weight / capacity_limit_kg))
             rec_drivers = min_drivers + 1
-            
-            # Time constraints: order servicing + roundtrip distance
+
             max_orders_per_driver = max(1, int((max_delivery_time - 20) / 5))
             time_based_drivers = int(np.ceil(len(df) / max_orders_per_driver))
             rec_drivers = max(rec_drivers, time_based_drivers)
-            
-            # Constrain to valid ranges
+
             rec_drivers = min(max(2, rec_drivers), len(df))
             num_drivers = rec_drivers
-            
+
             avg_dist = 8.2
             est_del_time = int(np.round((avg_dist * 1.5 * 2) + ((len(df) / rec_drivers) * 5)))
             confidence = int(min(98, max(75, 100 - abs(est_del_time - max_delivery_time) * 1.5)))
-            
+
             ai_recommendation = {
                 "recommended_drivers": rec_drivers,
                 "avg_payload": np.round(avg_payload, 2),
@@ -120,7 +114,7 @@ def get_logistics_routing(
                 "confidence": confidence,
                 "reason": f"Average payload is {avg_payload:.2f} kg per order. With a vehicle capacity of {capacity_limit_kg} kg and a maximum delivery time of {max_delivery_time} mins, the solver requires {rec_drivers} drivers to guarantee timely deliveries and satisfy capacity constraints."
             }
-            
+
         result = solve_routing(
             DELIVERIES_PATH,
             fleet_size=num_drivers,
@@ -132,10 +126,10 @@ def get_logistics_routing(
             optimization_goal=optimization_goal,
             enable_priority=enable_priority
         )
-        
+
         if ai_recommendation:
             result["ai_recommendation"] = ai_recommendation
-            
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Logistics routing solver failed: {str(e)}")
@@ -192,7 +186,7 @@ def retrain_model(
     global CURRENT_TRAINING_PERIOD
     if period not in ["Last 7 Days", "Last 30 Days", "Last Quarter"]:
         raise HTTPException(status_code=400, detail="Invalid retraining period. Select from 'Last 7 Days', 'Last 30 Days', 'Last Quarter'.")
-    
+
     CURRENT_TRAINING_PERIOD = period
     return {"status": "success", "message": f"Econometric model active training window updated to: {period}."}
 
@@ -204,21 +198,18 @@ def upload_transactions_log(file: UploadFile = File(...)):
     filename = file.filename
     if not (filename.endswith(".csv") or filename.endswith(".parquet")):
         raise HTTPException(status_code=400, detail="Only CSV or Parquet format files are supported.")
-    
+
     try:
-        # Save upload payload
         if filename.endswith(".csv"):
             df = pd.read_csv(file.file)
         else:
             df = pd.read_parquet(file.file)
-            
-        # Ensure all columns required for the Log-Log OLS regression are present
+
         required_cols = ["Timestamp", "SKU_ID", "Price", "Competitor_Price", "Promotion_Active", "Temperature", "Rain", "Weekend", "Festival", "Holiday", "Time_of_Day", "Quantity_Sold"]
         missing = [col for col in required_cols if col not in df.columns]
         if missing:
             raise HTTPException(status_code=400, detail=f"Log schema mismatch. Missing columns: {', '.join(missing)}")
-            
-        # Write back to transactions.parquet
+
         df.to_parquet(TRANSACTIONS_PATH, index=False)
         return {"status": "success", "message": f"Successfully ingested {len(df)} transactions into database. Parquet repo refreshed."}
     except Exception as e:

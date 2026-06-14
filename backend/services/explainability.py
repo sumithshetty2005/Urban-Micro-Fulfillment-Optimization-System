@@ -28,7 +28,7 @@ def explain_pricing(
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
-    
+
     prompt = (
         f"You are a Senior Pricing Strategy Consultant advising a retail operations manager. "
         f"Analyze these simulation details for SKU: {sku_id}:\n"
@@ -50,7 +50,7 @@ def explain_pricing(
         f"1. **Causal Drivers**: Explain why this demand/profit outcome occurred, explicitly commenting on how the inventory level relative to predicted demand affected the profit (e.g. stockout lost revenue, or overstock holding penalty).\n"
         f"2. **Operational recommendation**: Actionable advice on price adjustments (raise price for stockouts, lower for overstocks) or promotional triggers."
     )
-    
+
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [
@@ -60,7 +60,7 @@ def explain_pricing(
         "temperature": 0.2,
         "max_tokens": 250
     }
-    
+
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=10.0)
         response.raise_for_status()
