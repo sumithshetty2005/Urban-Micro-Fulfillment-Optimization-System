@@ -1,155 +1,184 @@
-# Urban Micro-Fulfillment Optimization System
+# 🏬 Urban Micro-Fulfillment Optimization System (UMFOS)
 
-This system optimizes pricing and logistics for urban micro-fulfillment centers. It combines historical sales econometric regression (OLS) to maximize revenue with spatial route routing (CVRP) to dispatch local vehicle fleets under capacity limits.
+An end-to-end SaaS optimization platform that leverages **Econometric Modeling (OLS)** and **Operations Research (Capacitated Vehicle Routing)** to maximize profit margins and optimize last-mile logistics for urban micro-fulfillment hubs.
 
 ---
 
-## 📊 System Overview
+## 🚀 Key Value Proposition & Business Impact
+In urban delivery setups, pricing and route dispatching are usually solved in silos. **UMFOS** unifies these two engines to optimize the bottom-line:
+1. **Dynamic Econometric Pricing**: Retrains an Ordinary Least Squares (OLS) regression model on sales history to calculate price elasticity. It sweeps prices dynamically to select the price that maximizes overall profit (accounting for holding penalties and item costs).
+2. **Capacitated Fleet Dispatching**: Resolves the NP-hard Capacitated Vehicle Routing Problem (CVRP) using Google OR-Tools, ensuring 100% service fulfillment with minimal transit distance and vehicle wear-and-tear under strict payload constraints.
 
-### 1. System Architecture
-The application is designed using a clean, modern three-tier architecture that spans a React frontend, a FastAPI gateway, and specialized Python compute engines:
+---
+
+## 🖥️ Live Dashboard UI & Screenshots
+
+### 1. Pricing Engine & Elasticity Simulator
+*Features real-time parameter tuning, OLS regression curve visualizations, and what-if simulators for demand, revenue, and profit margins.*
+
+![Pricing Engine Dashboard](docs/images/pricing_tab.png)
+
+### 2. Fleet Routing & Geographic Dispatch Module
+*Visualizes interactive delivery routes, payload distribution per driver, route transit logs, and custom optimizer configurations.*
+
+![Routing Engine Dashboard](docs/images/routing_tab.png)
+
+---
+
+## 📊 System Architecture & Data Flows
+
+### Architecture Diagram
+The system is built using a decoupled, multi-layer service structure:
 
 ![System Architecture](docs/images/architecture_diagram.jpg)
 
-* **Frontend Layer**: Built using React, Vite, and Tailwind CSS. It features:
-  * Sidebar Navigation & Global Metrics Dashboard (`App.jsx`)
-  * Pricing Engine UI (pricing parameter tuning, optimization controls, regression curves)
-  * Routing Module UI (dispatch controls, geographic maps, delivery stop sequences)
-* **API Layer**: FastAPI backend (`main.py`) containing:
-  * CORS Middleware configuration
-  * Pricing optimization route (`/api/pricing`)
-  * Fleet dispatch route (`/api/routing`)
-* **Compute / Engine Layer**: Mathematical and optimization engines:
-  * Pricing Engine: Powered by `statsmodels` OLS regression to calculate price elasticities and execute revenue sweeps.
-  * Routing Engine: Powered by Google OR-Tools CVRP solver using Haversine distance computations.
-* **Data Layer**: Integrates raw inputs like historical sales transaction logs, vehicle capacities, delivery stop coordinates (latitude/longitude), and driver constraint rules.
+* **Frontend Layer (React + Vite + Tailwind CSS)**: Modular SPA structure featuring dynamic sliders, SVG-based route visualization maps, and metric summary cards.
+* **API Gateway (FastAPI Backend)**: A high-performance Python web framework supplying RESTful JSON endpoints, validation schemas, and CORS handling.
+* **Compute / Optimization Engines**:
+  * **Pricing Engine**: Integrates `statsmodels` for log-log regression estimation and dynamic revenue sweep loops.
+  * **Routing Engine**: Leverages Google `OR-Tools` CP solver with Haversine distance matrix calculators to find optimal transit paths.
+* **Data Layer**: Structured local storage using parquet data logs (`transactions.parquet` & `pending_deliveries.parquet`) simulating database tables.
 
 ---
 
-### 2. User Flow & Use Cases
-The user journey covers two operational branches (pricing optimizations and fleet dispatching) driven by the Hub Operations Manager:
+## 🔄 User Journey & Operations Flow
 
-![User Flow & Use Cases](docs/images/user_flow_diagram.png)
+This flow-chart traces the actions an Operations Hub Manager takes to execute end-to-end optimizations:
 
-1. **Dashboard & KPIs**: Operations Manager logs in and monitors current revenues, fleet utilization, and delivery fulfillment metrics.
-2. **Branch 1: Pricing Tuning**: 
-   * Input SKU details and pricing constraints.
-   * Run econometric OLS model to estimate demand elasticity.
-   * View optimal price output and predicted revenue uplift.
-   * Approve and apply the updated price catalog across sales channels.
-3. **Branch 2: Logistics Dispatch**:
-   * Upload target delivery stops (CSV/Excel coordinates and order payloads).
-   * Specify active drivers and vehicle payload limits.
-   * Run the Capacitated Vehicle Routing Problem (CVRP) optimizer.
-   * View optimal route paths and dispatch stop schedules to driver coordinates.
+![User Flow Diagram](docs/images/user_flow_diagram.png)
 
 ---
 
-## 📈 Operational Metrics Breakdown
+## 🛠️ The Tech Stack
 
-```
-================================================================================
-MICRO-FULFILLMENT ENGINE REPORT - NAVI MUMBAI HUB
-================================================================================
-PRICING TUNING (OLS ECONOMETRICS)
---------------------------------------------------------------------------------
-SKU Catalog Active               : 5 SKUs
-Regression Formulation           : Demand ~ Price + Competitor_Price + Promotion
-Elasticity Coefficient (Beta_1)  : -4.7289 (SKU_001, highly price elastic)
-Average R-Squared (Goodness)     : 89.2%
-Optimal Price (SKU_001 Target)   : $21.30 (vs $16.18 current)
-Predicted Revenue Uplift         : +$366.52 (+39.12% increase)
-
-LOGISTICS FLEET DISPATCH (CVRP SOLUTIONS)
---------------------------------------------------------------------------------
-Orders Serviced (Stops)          : 25 deliveries
-Active Delivery Fleet            : 7 drivers (Auto-scaled from 4 to guarantee feasibility)
-Total Route transit Distance     : 66.33 km
-Total Distributed Payload        : 89.59 KG (Average: 12.80 KG per driver)
-Max Driver Capacity Limit        : 15.0 KG (Strict)
-Route Capacity Utilization       : 85.3% average utilization
-Total System Service Level       : 100.0% (0 missed nodes, 0 capacity violations)
-================================================================================
-```
+| Component | Technology | Description |
+|---|---|---|
+| **Frontend UI** | React 18, Vite, Tailwind CSS | Ultra-fast rendering SPA, Glassmorphism design system, responsive layout. |
+| **Charts & Graphics** | Recharts, Custom SVGs | Interactive OLS curve visualization, interactive vehicle route maps. |
+| **Backend Framework** | FastAPI (Python) | Async HTTP server with automatic Pydantic request validation and Swagger docs. |
+| **Statistical Computations** | Statsmodels, Pandas, NumPy | Log-Log Ordinary Least Squares (OLS) regression models and data wrangling. |
+| **Combinatorial Solvers** | Google OR-Tools (Routing) | Capacitated Vehicle Routing Problem (CVRP) solver using Guided Local Search. |
+| **Quality & QA** | Playwright (Python) | Automated headless browser interactions and confirmation screenshot captures. |
 
 ---
 
-## 📂 Codebase & Directory Structure
+## 🧮 Mathematical & Algorithmic Formulation
+
+### 1. Price Elasticity Econometric Model
+The demand forecasting model is trained using a log-log Ordinary Least Squares (OLS) regression formulation:
+
+\[\ln(\text{Quantity Sold} + 1) = \beta_0 + \beta_1 \ln(\text{Price}) + \beta_2 \ln(\text{Competitor Price}) + \beta_3 \text{Promotion Active} + \sum \beta_i \text{Contextual Features}\]
+
+* **Elasticity Coefficient (\(\beta_1\))**: Quantifies how sensitive demand is to price changes.
+* **Revenue Sweep Optimizer**: Evaluates a range of pricing variants \(P\) (50% to 150% of the current price) to solve for the maximum net profit:
+  \[\text{Profit}(P) = (P - \text{Cost}) \times \min(\text{Inventory}, \text{Predicted Demand}(P)) - \text{Holding Cost} \times \max(0, \text{Inventory} - \text{Predicted Demand}(P))\]
+
+### 2. Capacitated Vehicle Routing (CVRP) Optimization
+Given a set of delivery nodes \(N\), vehicle fleet \(V\), and homogeneous capacity \(Q\):
+* **Objective**: Minimize total operational transit costs and fixed vehicle utilization fees.
+  \[\text{Minimize } \sum_{i \in N} \sum_{j \in N} \sum_{v \in V} c_{ij} x_{ijv} + \sum_{v \in V} F_v y_v\]
+  *Where \(c_{ij}\) is the distance, \(x_{ijv}\) is the path selection indicator, \(F_v\) is the driver's fixed cost, and \(y_v\) is a vehicle activation flag.*
+* **Constraints**:
+  * Every customer stop is visited exactly once by one vehicle.
+  * The total payload weight delivered on any route must not exceed the driver capacity limit \(Q\).
+
+---
+
+## 📂 Codebase Layout
 
 ```
-├── engines/
-│   ├── __init__.py         # Exports engines module interface
-│   ├── pricing.py          # Statsmodels OLS + Revenue Variant Sweep loop
-│   └── routing.py          # OR-Tools CVRP solver + Haversine Matrix Calculator
-├── main.py                 # FastAPI backend router with CORS support
-├── capture_screenshots.py  # Playwright browser automation screenshot script
-├── data/                   # Data directory for parquet files
-├── docker-compose.yml      # Docker compose configuration
-├── docs/                   # System design & review documentation
-│   ├── images/             # Diagrams and visual assets
-│   │   ├── architecture_diagram.jpg
-│   │   └── user_flow_diagram.png
-│   ├── ARCHITECTURE_REVIEW.md
-│   └── EXPLANATION.md
-├── scripts/                # Automation and validation scripts
-│   ├── generate_mock_data.py
-│   └── verify_backend.py   # Automated unit test suite for Python engines & endpoints
-├── frontend/               # Clean, modular React application 
+├── backend/
+│   ├── api/                # Sub-modules for routers, schemas, and config files
+│   ├── database/           # Local parquet mock database interface
+│   ├── engines/
+│   │   ├── optimization.py # Baseline optimization wrappers
+│   │   ├── pricing.py      # Statsmodels OLS + Revenue Variant Sweep loop
+│   │   └── routing.py      # OR-Tools CVRP solver + Haversine Matrix Calculator
+│   ├── services/           # AI insights and explainability logic
+│   ├── utils/              # Calculation helpers (Haversine formulas)
+│   ├── main.py             # FastAPI backend router with CORS support
+│   └── Dockerfile          # Production backend Docker image definition
+├── frontend/               # Modular React application 
 │   ├── src/
 │   │   ├── components/     # PricingEngine, RoutingModule components
 │   │   ├── App.jsx         # Sidebar nav + Global metrics dashboard
-│   │   ├── index.css       # Tailwind directives + Glassmorphic theme classes
-│   │   └── main.jsx        # Bootstrap ReactDOM entry
+│   │   ├── index.css       # Glassmorphic themes & styling definitions
+│   │   └── main.jsx        # App bootstrapper
 │   ├── package.json        # Frontend configuration and npm dependencies
 │   ├── tailwind.config.js  # Tailwind CSS definitions
-│   └── vite.config.js      # Vite dev server + proxy rules
-└── README.md               # Operations manual & metrics (this file)
+│   └── vite.config.js      # Vite dev server config + API proxy configs
+├── docs/                   # System design & review documentation
+│   └── images/             # Visual diagrams and UI screenshots
+├── scripts/                # Utility and test scripts
+│   ├── generate_mock_data.py
+│   └── verify_backend.py   # Automated unit test suite for Python engines & endpoints
+├── capture_screenshots.py  # Playwright browser automation screenshot script
+├── docker-compose.yml      # Local containerized orchestration configuration
+└── README.md               # Operations manual & recruiter overview (this file)
 ```
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Installation & Setup
 
 ### 1. Prerequisites
-Ensure you have **Python 3.10+** and **Node.js v18+** installed on your system.
-
-### 2. Backend Setup
-Install the python requirements:
-```bash
-pip install pandas pyarrow statsmodels "ortools<9.11" fastapi uvicorn playwright
-python -m playwright install chromium
-```
-
-Start the backend FastAPI server:
-```bash
-python main.py
-```
-*The backend API will run on `http://127.0.0.1:8000`.*
-
-### 3. Frontend Setup
-Navigate to the `frontend/` directory and install NPM packages:
-```bash
-cd frontend
-npm install
-```
-
-Start the Vite development server:
-```bash
-npm run dev
-```
-*The React SaaS UI will be available at `http://localhost:5173`.*
+Verify that you have the following software installed:
+* **Python 3.10+**
+* **Node.js v18+** (with npm)
 
 ---
 
-## 🧪 Verification & Local Tests
+### 2. Backend Setup & Run
 
-Run the backend engine regression/routing test suite:
-```bash
-python scripts/verify_backend.py
-```
+1. **Install Python Packages**:
+   ```bash
+   pip install pandas pyarrow statsmodels "ortools<9.11" fastapi uvicorn playwright
+   python -m playwright install chromium
+   ```
 
-Run the Playwright browser validation script (captures dashboard rendering confirmations):
-```bash
-python capture_screenshots.py
-```
-Screenshots will be saved to your local artifacts folder as `pricing_tab.png` and `routing_tab.png`.
+2. **Generate Mock Data**:
+   Pre-populate the database parquet tables with transactional and delivery history:
+   ```bash
+   python scripts/generate_mock_data.py
+   ```
+
+3. **Start FastAPI Backend Server**:
+   ```bash
+   python backend/main.py
+   ```
+   *The Swagger interactive documentation will be available at: `http://127.0.0.1:8000/docs`.*
+
+---
+
+### 3. Frontend Setup & Run
+
+1. **Install Dependencies**:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. **Start Vite Dev Server**:
+   ```bash
+   npm run dev
+   ```
+   *Open `http://localhost:5173` in your browser to interact with the SaaS dashboard.*
+
+---
+
+## 🧪 Testing & Automated Verification
+
+Ensure that the compute engines and REST endpoints operate within strict mathematical parameters:
+
+1. **Run Backend Test Suite**:
+   ```bash
+   python scripts/verify_backend.py
+   ```
+   *Verifies OLS slope coefficients, negative elasticity constraints, route feasibilities, and API endpoint codes.*
+
+2. **Run Headless Browser Interaction Tests**:
+   Ensure the frontend UI compiles, connects to the backend, and renders charts correctly:
+   ```bash
+   python capture_screenshots.py
+   ```
+   *Uses Playwright to boot a browser instance, verify live API data states, and capture PNG representations of the tabs.*
