@@ -3,7 +3,7 @@ import asyncio
 from playwright.async_api import async_playwright
 
 async def capture():
-    artifact_dir = r"C:\Users\user\." + "gemini" + r"\antigravity\brain\5d3b9226-22c2-468f-9916-a19ebe494675"
+    artifact_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "docs", "images"))
     if not os.path.exists(artifact_dir):
         os.makedirs(artifact_dir)
         
